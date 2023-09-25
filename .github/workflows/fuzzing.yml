@@ -1,0 +1,93 @@
+name: Fuzzing Workflow
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: 'Domain(s) to scan'
+        required: true
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Download ParamSpider
+        run: git clone https://github.com/0xKayala/ParamSpider.git
+        working-directory: ./  # Make sure you're in the repository root
+
+      - name: Download Nuclei
+        run: git clone https://github.com/projectdiscovery/nuclei.git
+        working-directory: ./  # Make sure you're in the repository root
+
+      - name: Download Templates
+        run: git clone https://github.com/projectdiscovery/fuzzing-templates.git
+        working-directory: ./  # Make sure you're in the repository root
+
+  fuzzing:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.20'
+
+      - name: Setup Dependencies
+        run: sudo apt-get install libpcap-dev
+
+      - name: Cache Go
+        id: cache-go
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/go
+          key: ${{ runner.os }}-go
+
+      - name: Setting up ProjectDiscovery tools
+        if: steps.cache-go.outputs.cache-hit != 'true'
+        env:
+          GO111MODULE: on
+        run: |
+          go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
+          shell: bash
+
+      - name: Running ParamSpider
+        shell: bash
+        run: |
+          pip3 install -r ParamSpider/requirements.txt
+          chmod +x run.py
+          python3 run.py --domain ${{ github.event.inputs.domain }}
+
+      - name: Running nuclei-fuzzing scan
+        run: |
+          nuclei -l output/output.txt -rl 300 -bs 35 -c 30 -mhe 10 -ni -t fuzzing-templates/ -stats -silent -severity critical,medium,high,low -o output/vuln.txt | tee output/vuln.txt
+        shell: bash
+
+      - name: Sorting the output results
+        run: |
+          find output -type f -exec sort {} -o {} ;
+        shell: bash
+
+      - name: Create local changes
+        run: |
+          git add output/vuln.txt
+        shell: bash
+
+  commit-push:
+    runs-on: ubuntu-latest
+    needs: fuzzing
+    steps:
+      - name: Configure Git
+        run: |
+          git config --local user.email "joeli1002@qq.com"
+          git config --global user.name "joejoequte"
+
+      - name: Commit results to GitHub
+        run: |
+          git commit -m "Nuclei Report" -a --allow-empty
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GIT_TOKEN }}
+          branch: ${{ github.ref }}
