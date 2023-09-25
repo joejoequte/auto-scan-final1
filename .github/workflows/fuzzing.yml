@@ -28,8 +28,13 @@ jobs:
         run: |
           # Use echo to create the ParamSpider.py script with the desired content
           echo "import os" > ParamSpider/ParamSpider.py
-          echo "with open('domain.txt','r') as file:" >> ParamSpider/ParamSpider.py
-          echo "    hosts = [line.strip() for line in file.readlines()]" >> ParamSpider/ParamSpider.py
+          echo "import os" >> ParamSpider/ParamSpider.py
+          echo "domain = os.environ.get('DOMAIN')" >> ParamSpider/ParamSpider.py
+          echo "if domain:" >> ParamSpider/ParamSpider.py
+          echo "    hosts = [domain]" >> ParamSpider/ParamSpider.py
+          echo "else:" >> ParamSpider/ParamSpider.py
+          echo "    with open('domain.txt','r') as file:" >> ParamSpider/ParamSpider.py
+          echo "        hosts = [line.strip() for line in file.readlines()]" >> ParamSpider/ParamSpider.py
           echo "for host in hosts:" >> ParamSpider/ParamSpider.py
           echo "    os.system('python3 ParamSpider/paramspider.py --domain ' + host + ' --output output/output.txt')" >> ParamSpider/ParamSpider.py
 
