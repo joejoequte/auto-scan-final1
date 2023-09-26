@@ -52,8 +52,8 @@ jobs:
           go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
 
       - name: Running ParamSpider and Nuclei scan
+        working-directory: ./1
         run: |
-          working-directory: ./1
           pip3 install certifi==2020.4.5.1 chardet==3.0.4 idna==2.9 requests==2.23.0 urllib3==1.25.8
           chmod +x paramspider.py
 
@@ -69,6 +69,7 @@ jobs:
     needs: fuzzing
     steps:
       - name: Configure Git
+        working-directory: ./
         run: |
           git config --local user.email "j.oejoequte@gmail.com"
           git config --global user.name "joejoequte"
