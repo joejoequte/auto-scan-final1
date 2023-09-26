@@ -53,11 +53,12 @@ jobs:
 
       - name: Running ParamSpider and Nuclei scan
         run: |
+          working-directory: ./1
           pip3 install certifi==2020.4.5.1 chardet==3.0.4 idna==2.9 requests==2.23.0 urllib3==1.25.8
-          chmod +x 1/paramspider.py
+          chmod +x paramspider.py
 
           # Replace 'example.com' with the actual domain you want to scan
-          python3 1/paramspider.py --domain ${{ github.event.inputs.domain }} --output output/output.txt
+          python3 paramspider.py --domain ${{ github.event.inputs.domain }} --output output/output.txt
 
           nuclei -l output/output.txt -rl 300 -bs 35 -c 30 -mhe 10 -ni -t fuzzing-templates/ -stats -silent -severity critical,medium,high,low -o output/vuln.txt
 
