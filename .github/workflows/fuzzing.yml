@@ -52,7 +52,7 @@ jobs:
           go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
 
       - name: Running ParamSpider and Nuclei scan
-        working-directory: 1
+        working-directory: 1/paramspider.py
         run: |
           pip3 install certifi==2020.4.5.1 chardet==3.0.4 idna==2.9 requests==2.23.0 urllib3==1.25.8
           chmod +x paramspider.py
