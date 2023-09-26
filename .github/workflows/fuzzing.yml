@@ -24,21 +24,6 @@ jobs:
         run: git clone https://github.com/projectdiscovery/fuzzing-templates.git
         working-directory: ./  # Make sure you're in the repository root
         
-      - name: Create ParamSpider.py
-        run: |
-          # Use echo to create the ParamSpider.py script with the desired content
-          echo "import os" > ParamSpider/ParamSpider.py
-          echo "import os" >> ParamSpider/ParamSpider.py
-          echo "domain = os.environ.get('DOMAIN')" >> ParamSpider/ParamSpider.py
-          echo "if domain:" >> ParamSpider/ParamSpider.py
-          echo "    hosts = [domain]" >> ParamSpider/ParamSpider.py
-          echo "else:" >> ParamSpider/ParamSpider.py
-          echo "    with open('domain.txt','r') as file:" >> ParamSpider/ParamSpider.py
-          echo "        hosts = [line.strip() for line in file.readlines()]" >> ParamSpider/ParamSpider.py
-          echo "for host in hosts:" >> ParamSpider/ParamSpider.py
-          echo "    os.system('python3 ParamSpider/paramspider.py --domain ' + host + ' --output output/output.txt')" >> ParamSpider/ParamSpider.py
-
-  
 
   fuzzing:
     runs-on: ubuntu-latest
@@ -69,10 +54,10 @@ jobs:
       - name: Running ParamSpider and Nuclei scan
         run: |
           pip3 install certifi==2020.4.5.1 chardet==3.0.4 idna==2.9 requests==2.23.0 urllib3==1.25.8
-          chmod +x ParamSpider/paramspider.py
+          chmod +x paramspider.py
 
           # Replace 'example.com' with the actual domain you want to scan
-          python3 ParamSpider/paramspider.py --domain ${{ github.event.inputs.domain }} --output output/output.txt
+          python3 paramspider.py --domain ${{ github.event.inputs.domain }} --output output/output.txt
 
           nuclei -l output/output.txt -rl 300 -bs 35 -c 30 -mhe 10 -ni -t fuzzing-templates/ -stats -silent -severity critical,medium,high,low -o output/vuln.txt
 
